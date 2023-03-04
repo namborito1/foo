@@ -1,0 +1,37 @@
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+
+package tibber.battery.v1;
+
+service BatteryService {
+  rpc SetSchedule(SetScheduleRequest) returns (SetScheduleResponse);
+}
+
+message SetScheduleRequest {
+  string SerialNumber = 1;
+  repeated Schedule Schedules = 2;
+}
+
+message Schedule {
+  uint32 Id = 1;
+  google.protobuf.Timestamp From = 2;
+  google.protobuf.Timestamp To = 3;
+  int64 Power = 4;
+}
+
+message SetScheduleResponse {
+  string SerialNumber = 1;
+  Result Result = 2;
+}
+
+enum ResultCode {
+  OK = 0;
+  Error = 1;
+  Full = 2;
+}
+
+message Result {
+  ResultCode Status = 1;
+  string Message = 2;
+}

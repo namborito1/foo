@@ -74,5 +74,5 @@ message BatteryData {
 
 message UnknownEvent {
   string type = 1;
-  google.protobuf.Any data = 2;
+  bytes data = 2; // base64-encoded data
 }

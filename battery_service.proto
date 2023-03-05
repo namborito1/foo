@@ -1,37 +1,78 @@
 syntax = "proto3";
 
 import "google/protobuf/timestamp.proto";
+import "google/protobuf/any.proto";
+import "google/protobuf/empty.proto";
+import "google/protobuf/wrappers.proto";
 
 package tibber.battery.v1;
 
-service BatteryService {
-  rpc SetSchedule(SetScheduleRequest) returns (SetScheduleResponse);
+// The service contract
+service Contract {
+  rpc Ping(google.protobuf.Empty) returns (google.protobuf.Empty);
+  rpc ListBatteryEvents(ListBatteryEventsRequest) returns (ListBatteryEventsResponse);
 }
 
-message SetScheduleRequest {
-  string SerialNumber = 1;
-  repeated Schedule Schedules = 2;
+message ListBatteryEventsRequest {
+  // Filter options for the request. All fields are
+  // optional.
+  message Options {
+    // Optional pagination token
+    google.protobuf.StringValue pagination_token = 1;
+
+    // Return only messages after this timestamp (Unix Time
+    // Seconds)
+    google.protobuf.Timestamp after = 2;
+
+    // The maximum number of events returned in the
+    // response. The server may return fewer events than
+    // requested. If unspecified, the server will pick an
+    // appropriate default
+    google.protobuf.UInt32Value limit = 3;
+  }
+
+  Identifier id = 1;
+  Options options = 2;
 }
 
-message Schedule {
-  uint32 Id = 1;
-  google.protobuf.Timestamp From = 2;
-  google.protobuf.Timestamp To = 3;
-  int64 Power = 4;
+message ListBatteryEventsResponse {
+  // The events returned in the response
+  repeated BatteryEvent events = 1;
+
+  // A pagination token that can be used in a subsequent
+  // request to fetch the next page of events. If empty,
+  // there are no more events to be fetched.
+  google.protobuf.StringValue pagination_token = 2;
 }
 
-message SetScheduleResponse {
-  string SerialNumber = 1;
-  Result Result = 2;
+message Identifier {
+  oneof id {
+    string device_id = 1;
+    string serial_numer = 2;
+  }
 }
 
-enum ResultCode {
-  OK = 0;
-  Error = 1;
-  Full = 2;
+message BatteryEvent {
+  EventHeader header = 1;
+
+  oneof event {
+    BatteryData battery_data = 2;
+    UnknownEvent unknown_event = 3;
+  }
 }
 
-message Result {
-  ResultCode Status = 1;
-  string Message = 2;
+message EventHeader {
+  google.protobuf.Timestamp timestamp = 1;
+  string deviceId = 2;
+}
+
+message BatteryData {
+  int32 power = 3;
+  uint32 available_energy = 4;
+  uint32 state_of_charge = 5;
+}
+
+message UnknownEvent {
+  string type = 1;
+  google.protobuf.Any data = 2;
 }
